@@ -8,14 +8,16 @@ using namespace std;
 
 void add_to_tree(Node* value, Node* current, Node* &head);
 void display_tree(Node* current, int depth);
+Node* search_tree(Node* current, int value);
+void delete_from_tree(Node* position, int value);
 
 int main(){
   char input[20];
-  Node* head = new Node();
+  Node* head = NULL;
   bool running = true;
 
   while(running){
-    cout << "Enter a command (ADD, DELETE, QUIT):" << endl;
+    cout << "Enter a command (ADD, DELETE, SEARCH, DISPLAY, QUIT):" << endl;
     cin.get(input, 20);
     cin.ignore(20, '\n');
 
@@ -64,31 +66,66 @@ int main(){
       cin >> number;
       cin.ignore(10, '\n');
 
-      //delete_from_tree(number); //FINISH HERE
+      if(search_tree(head, number) != NULL){//value exists to delete
+	delete_from_tree(search_tree(head, number), number); //FINISH HERE
+      }
       
     }else if(strcmp(input, "DISPLAY") == 0){//print the tree
       display_tree(head, 0);
       
     }else if(strcmp(input, "SEARCH") == 0){//search for a number in tree
-
+      int number;
+      cout << "Enter a number to search" << endl;
+      cin >> number;
+      cin.ignore(10, '\n');
+      if(search_tree(head, number) != NULL){//if true say so!
+	cout << "Number exists in tree :)" << endl;
+      }else{
+	cout << "Number doesn't exist in tree :(" << endl;
+      }
     }
   }
   return 0;
 }
 
 
+//delete a number from the tree
+//cases: 0 children, 1 child, 2 children
+void delete_from_tree(Node* position, int value){
+  //zero children - set parent node next to null
+  
+
+}
+
+
+//searches the tree by binary searching
+Node* search_tree(Node* current, int value){
+  if(current->getValue() == value){//value matches the head value
+    return current;
+  }else{ //continue search
+    if(current->getValue() <= value &&
+       current->getRight() != NULL){//the value must be to the right
+      return search_tree(current->getRight(), value);
+    }else if(current->getValue() > value &&
+	     current->getLeft() != NULL){//value must be to the left
+      return search_tree(current->getLeft(), value);
+    }
+  }
+  return NULL;
+}
+
 //prints numbers from the tree in order
 void display_tree(Node* current, int depth){
-  if(current->getLeft() != NULL){ //still a value to the left
-    display_tree(current->getLeft(), (depth+1));
+  if(current->getRight() != NULL){ //still a value to the left
+    display_tree(current->getRight(), (depth+1));
   }
   for(int i = 0; i < depth; i++){
     cout << '\t';
   }
   cout << current->getValue() << endl;
 
-  if(current->getRight() != NULL){//still value to the right
-    display_tree(current->getRight(), (depth+1));
+  if(current->getLeft() != NULL){//still value to the right
+    display_tree(current->getLeft(), (depth+1));
   }
 }
 
@@ -98,8 +135,7 @@ void display_tree(Node* current, int depth){
 //add number value to tree
 void add_to_tree(Node* value, Node* current, Node* &head){
   if(head == NULL){//first value
-    current->setValue(value->getValue());
-    head = current;
+    head = value;
   }else{//not first 
     if(current->getValue() > value->getValue()){ //value goes to left
       if(current->getLeft() == NULL){//value goes to immediate left
