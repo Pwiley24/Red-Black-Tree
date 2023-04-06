@@ -9,7 +9,7 @@ using namespace std;
 void add_to_tree(Node* value, Node* current, Node* &head);
 void display_tree(Node* current, int depth);
 Node* search_tree(Node* current, int value);
-void delete_from_tree(Node* position, int value);
+void delete_from_tree(Node* position, int value, Node* parent);
 
 int main(){
   char input[20];
@@ -65,9 +65,9 @@ int main(){
       cout << "What number would you like to delete?" << endl;
       cin >> number;
       cin.ignore(10, '\n');
-
-      if(search_tree(head, number) != NULL){//value exists to delete
-	delete_from_tree(search_tree(head, number), number); //FINISH HERE
+      Node* position = search_tree(head, number);
+      if(position != NULL){//value exists to delete
+	delete_from_tree(position, number, position->getParent()); 
       }
       
     }else if(strcmp(input, "DISPLAY") == 0){//print the tree
@@ -90,11 +90,45 @@ int main(){
 
 
 //delete a number from the tree
+//position is the node you are going to delete
+//gathered from searching the tree for the node.
+//parent = parent of position
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, int value){
-  //zero children - set parent node next to null
-  
+void delete_from_tree(Node* position, int value, Node* parent){
+  //Case one:
+  if(position->getLeft() == NULL &&
+     position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
+       if(parent->getLeft() == position){//set parent left to null
+	 parent->setLeft(NULL);
+       }else{
+	 parent->setRight(NULL);
+       }
+       delete position;
 
+       //Case two:     
+  }else if(position->getLeft() != NULL){//one child to left of position
+    if(parent->getLeft() == position){//set parent left to position's left
+	parent->setLeft(position->getLeft());
+    }else{//set parent left to position's right
+      parent->setLeft(position->getRight());
+    }
+    delete position;
+  }else if(position->getRight() != NULL){//one child to right of position
+    if(parent->getLeft() == position){//set parent right to position's left
+      parent->setRight(position->getLeft());
+    }else{//set parent right to position's right
+      parent->setRight(position->getRight());
+    }
+    delete position;
+
+    //Case three:
+  }else if(position->getLeft() != NULL &&
+	   position->getRight() != NULL){//two children - find farthest left position right's left
+    if(parent->getLeft() == position){//
+
+    }
+
+  }
 }
 
 
@@ -136,16 +170,18 @@ void display_tree(Node* current, int depth){
 void add_to_tree(Node* value, Node* current, Node* &head){
   if(head == NULL){//first value
     head = value;
-  }else{//not first 
+  }else{//not first
     if(current->getValue() > value->getValue()){ //value goes to left
       if(current->getLeft() == NULL){//value goes to immediate left
 	current->setLeft(value);
+	value->setParent(current);
       }else{ //keep going down left of head
 	add_to_tree(value, current->getLeft(), head);
       }
     }else if(current->getValue() <= value->getValue()){//value goes to right
       if(current->getRight() == NULL){//value goes to immediate right
 	current->setRight(value);
+	value->setParent(current);
       }else{//keep going down right of head
 	add_to_tree(value, current->getRight(), head);
       }

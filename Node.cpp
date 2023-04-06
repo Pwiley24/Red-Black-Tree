@@ -4,15 +4,26 @@
 using namespace std;
 
 Node::Node(){
-  value = NULL;
+  value = 0;
   right = NULL;
   left = NULL;
+  parent = NULL;
 }
 
 Node::~Node(){
-  delete &value;
   right = NULL;
   left = NULL;
+  parent = NULL;
+}
+
+//return the parent node
+Node* Node::getParent(){
+  return parent;
+}
+
+//set the parent node
+void Node::setParent(Node* newParent){
+  parent = newParent;
 }
 
 //return right node
