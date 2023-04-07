@@ -9,7 +9,8 @@ using namespace std;
 void add_to_tree(Node* value, Node* current, Node* &head);
 void display_tree(Node* current, int depth);
 Node* search_tree(Node* current, int value);
-void delete_from_tree(Node* position, int value, Node* parent);
+void delete_from_tree(Node* position, Node* parent);
+Node* find_left_or_right(Node* current, char direction);
 
 int main(){
   char input[20];
@@ -67,7 +68,7 @@ int main(){
       cin.ignore(10, '\n');
       Node* position = search_tree(head, number);
       if(position != NULL){//value exists to delete
-	delete_from_tree(position, number, position->getParent()); 
+	delete_from_tree(position, position->getParent()); 
       }
       
     }else if(strcmp(input, "DISPLAY") == 0){//print the tree
@@ -83,6 +84,8 @@ int main(){
       }else{
 	cout << "Number doesn't exist in tree :(" << endl;
       }
+    }else if(strcmp(input, "QUIT") == 0){//quit program
+      running = false;
     }
   }
   return 0;
@@ -94,43 +97,122 @@ int main(){
 //gathered from searching the tree for the node.
 //parent = parent of position
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, int value, Node* parent){
+void delete_from_tree(Node* position, Node* parent){
   //Case one:
   if(position->getLeft() == NULL &&
      position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
-       if(parent->getLeft() == position){//set parent left to null
-	 parent->setLeft(NULL);
-       }else{
-	 parent->setRight(NULL);
-       }
-       delete position;
+    if(parent->getLeft() == position){//set parent left to null
+      parent->setLeft(NULL);
+    }else{
+      parent->setRight(NULL);
+    }
+    delete position;
 
-       //Case two:     
-  }else if(position->getLeft() != NULL){//one child to left of position
-    if(parent->getLeft() == position){//set parent left to position's left
+       //Case two:
+    
+  }else if((position->getLeft() != NULL &&
+	   position->getRight() == NULL) ||
+	   (position->getLeft() == NULL &&
+	    position->getRight() != NULL)){//one child to left/right of position
+    if(position->getLeft() != NULL){//set left value of position to new position and delete 
+      if(parent->getLeft() == position){
 	parent->setLeft(position->getLeft());
+      }else{
+	parent->setRight(position->getLeft());
+      }
+      position->getLeft()->setParent(parent);
+    }else{//setting right of position
+      if(parent->getLeft() == position){
+	parent->setLeft(position->getRight());
+      }else{
+	parent->setRight(position->getRight());
+      }
+      position->getRight()->setParent(parent);
+    }
+    delete position;
+    
+    /*if(parent->getLeft() == position){//set parent left to position's left - position is to left
+
+      parent->setLeft(position->getLeft());
     }else{//set parent left to position's right
       parent->setLeft(position->getRight());
     }
     delete position;
-  }else if(position->getRight() != NULL){//one child to right of position
-    if(parent->getLeft() == position){//set parent right to position's left
-      parent->setRight(position->getLeft());
+ 
+    if(parent->getRight() == position){//set parent right to position's left
+      parent->setRight(position->getRight());
     }else{//set parent right to position's right
       parent->setRight(position->getRight());
-    }
-    delete position;
+      }*/
+    //delete position;
 
+
+
+ 
+    
     //Case three:
   }else if(position->getLeft() != NULL &&
 	   position->getRight() != NULL){//two children - find farthest left position right's left
-    if(parent->getLeft() == position){//
+    cout << "case 3 " << endl;
 
-    }
+    //STORE RIGHT ONE
+    Node* rightOne = position->getRight();
 
+    //FIND LEFT MOST
+    Node* leftMost = find_left_or_right(rightOne, 'L');
+
+    position->setValue(leftMost->getValue());
+    cout << leftMost->getValue() << " " << leftMost->getParent()->getValue() << endl;
+    delete_from_tree(leftMost, leftMost->getParent());
+    
+    
   }
+
+
+    /*Node* posRMost = find_left_or_right(position, 'R'); //finds right most value of position
+    posRMost->setParent(parent);//set right most parent to position's parent
+    Node* mostLeft = find_left_or_right(posRMost, 'L');//finds leftest value of right most
+    if(parent->getLeft() == position){//dealing with the left side of tree
+      parent->setLeft(posRMost); //set parent to right most of position
+      if(mostLeft != NULL){//there is a left node - set position's other child to this node 
+	position->getLeft()->setParent(mostLeft);
+	mostLeft->setLeft(position->getLeft());
+      }else{ //no left on right most node - set position's other child to right most
+	position->getLeft()->setParent(posRMost);
+	posRMost->setLeft(position->getLeft());
+      }
+    }else{//dealing with the right side of tree
+      parent->setRight(posRMost);//set parent to left most of position
+      cout << parent->getRight()->getValue() << endl;
+      if(mostLeft != NULL){//there is a right node - set position's other child to this node
+	position->getRight()->setParent(mostLeft);
+	mostLeft->setLeft(position->getRight());
+      }else{//no right node on left most node - set position's other child to left most
+	position->getRight()->setParent(posRMost);
+	posRMost->setLeft(position->getLeft());
+	}*/
+    
+
 }
 
+
+//find the left most or right most node from a starting position
+Node* find_left_or_right(Node* current, char direction){
+  if(direction == 'L'){//find left most
+    if(current->getLeft() != NULL){//more to the left - recursion
+      return find_left_or_right(current->getLeft(), 'L');
+    }else{//return current
+      return current;
+    }
+  }else if(direction == 'R'){//find right most
+    if(current->getRight() != NULL){
+      return find_left_or_right(current->getRight(), 'R');
+    }else{//return current
+      return current;
+    }
+  }
+  return NULL;
+}
 
 //searches the tree by binary searching
 Node* search_tree(Node* current, int value){
