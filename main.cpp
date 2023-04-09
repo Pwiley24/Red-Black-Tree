@@ -9,7 +9,7 @@ using namespace std;
 void add_to_tree(Node* value, Node* current, Node* &head);
 void display_tree(Node* current, int depth);
 Node* search_tree(Node* current, int value);
-void delete_from_tree(Node* position, Node* parent);
+void delete_from_tree(Node* position, Node* parent, Node* &head);
 Node* find_left_or_right(Node* current, char direction);
 
 int main(){
@@ -68,11 +68,17 @@ int main(){
       cin.ignore(10, '\n');
       Node* position = search_tree(head, number);
       if(position != NULL){//value exists to delete
-	delete_from_tree(position, position->getParent()); 
+	delete_from_tree(position, position->getParent(), head); 
+      }else{
+        cout << "Number doesn't exist in tree." << endl;
       }
       
     }else if(strcmp(input, "DISPLAY") == 0){//print the tree
-      display_tree(head, 0);
+      if(head != NULL){
+        display_tree(head, 0);
+      }else{
+        cout << "Nothing to display" << endl;
+      }
       
     }else if(strcmp(input, "SEARCH") == 0){//search for a number in tree
       int number;
@@ -96,64 +102,62 @@ int main(){
 //position is the node you are going to delete
 //gathered from searching the tree for the node.
 //parent = parent of position
+//Note: parent can be null -> root/head of tree is being deleted
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, Node* parent){
+void delete_from_tree(Node* position, Node* parent, Node* &head){
   //Case one:
   if(position->getLeft() == NULL &&
      position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
-    if(parent->getLeft() == position){//set parent left to null
+    if(parent == NULL){//deleting the root/head with no children - head is null now
+      head = NULL; 
+    }else if(parent->getLeft() == position){//set parent left to null
       parent->setLeft(NULL);
     }else{
       parent->setRight(NULL);
     }
     delete position;
 
+
        //Case two:
-    
-  }else if((position->getLeft() != NULL &&
+
+   }else if((position->getLeft() != NULL &&
 	   position->getRight() == NULL) ||
 	   (position->getLeft() == NULL &&
 	    position->getRight() != NULL)){//one child to left/right of position
-    if(position->getLeft() != NULL){//set left value of position to new position and delete 
-      if(parent->getLeft() == position){
-	parent->setLeft(position->getLeft());
-      }else{
-	parent->setRight(position->getLeft());
+
+
+
+    if(position->getLeft() != NULL){//set left value of position to new position and delete
+      if(parent == NULL){//deleting head and replacing with left child
+	position->getLeft()->setParent(NULL);
+        head = position->getLeft();
+      }else{//not deleting head
+        if(parent->getLeft() == position){
+	  parent->setLeft(position->getLeft());
+        }else{
+  	  parent->setRight(position->getLeft());
+        }
+        position->getLeft()->setParent(parent);
       }
-      position->getLeft()->setParent(parent);
     }else{//setting right of position
-      if(parent->getLeft() == position){
-	parent->setLeft(position->getRight());
-      }else{
-	parent->setRight(position->getRight());
+      if(parent == NULL){//deleting head and replacing with right child
+        position->getRight()->setParent(NULL);
+        head = position->getRight();
+      }else{//not deleting head
+        if(parent->getLeft() == position){
+	  parent->setLeft(position->getRight());
+        }else{
+	  parent->setRight(position->getRight());
+        }
+        position->getRight()->setParent(parent);
       }
-      position->getRight()->setParent(parent);
     }
     delete position;
-    
-    /*if(parent->getLeft() == position){//set parent left to position's left - position is to left
 
-      parent->setLeft(position->getLeft());
-    }else{//set parent left to position's right
-      parent->setLeft(position->getRight());
-    }
-    delete position;
- 
-    if(parent->getRight() == position){//set parent right to position's left
-      parent->setRight(position->getRight());
-    }else{//set parent right to position's right
-      parent->setRight(position->getRight());
-      }*/
-    //delete position;
-
-
-
- 
     
     //Case three:
   }else if(position->getLeft() != NULL &&
 	   position->getRight() != NULL){//two children - find farthest left position right's left
-    cout << "case 3 " << endl;
 
     //STORE RIGHT ONE
     Node* rightOne = position->getRight();
@@ -162,8 +166,7 @@ void delete_from_tree(Node* position, Node* parent){
     Node* leftMost = find_left_or_right(rightOne, 'L');
 
     position->setValue(leftMost->getValue());
-    cout << leftMost->getValue() << " " << leftMost->getParent()->getValue() << endl;
-    delete_from_tree(leftMost, leftMost->getParent());
+    delete_from_tree(leftMost, leftMost->getParent(), head);
     
     
   }
