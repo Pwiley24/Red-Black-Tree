@@ -265,20 +265,86 @@ void add_to_tree(Node* value, Node* current, Node* &root){
 
 //readjusts the nodes in the tree to follow the R-B rules
 //no two reds in a row
+//current always starts as red
 //case 1: new node is root/head
 //case 2: parent node is red and root
 //case 3: parent and uncle nodes are red
 //case 4: parent node is red, uncle node is black, inserted node is "left grandchild"
-//case 4: parent node is red, uncle node is black, inserted node is "right grandchild"
+//case 5: parent node is red, uncle node is black, inserted node is "right grandchild"
 void adjustNode(Node* current, Node* &root){
   if(current != root){//not the root -> cases 2-4
-    if(current->getParent()->getColor() == 'r'){//check for two reds in a row
-      //readjust!
-      cout << "readjusting..." << endl;
+    Node* grand = NULL;
+    Node* parent = NULL;
+    Node* uncle = NULL;
+    if(current->getGrand(current->getParent()) != NULL){//assigns if there is a grandparent node
+      grand = current->getGrand(current->getParent());
+    }
+    if(current->getUncle(current->getGrand(current->getParent()), current->getParent()) != NULL){//assigns if there is an uncle node
+      uncle = current->getUncle(grand, current->getParent());
+    }
+    parent = current->getParent(); //can be equal to NULL
+   
+    if(parent->getColor() == 'r' &&
+       parent == root){//case 2 (parent and root are red)
+      //CASE 2: recolor root black
+      cout << "Case 2" << endl;
+      root->setColor('b');
+    }else if(parent->getColor() == 'r' &&
+	     uncle->getColor() == 'r'){//case 3 (parent and uncle are red)
+      //FOR CASE 3: recolor parent and uncle black. Grandparent becomes red
+      cout << "case 3" << endl;
+      cout << "uncle: " << uncle->getValue() << endl;
+      cout << "parent: " << parent->getValue() << endl;
+      parent->setColor('b');
+      uncle->setColor('b');
+      grand->setColor('r');
+      //CASE 3: check up the tree with grandparent as current if grandparent's parent is red
+      if(grand->getParent() != NULL &&
+	 grand->getParent()->getColor() == 'r'){
+	adjustNode(grand, root);
+      }
+    }else if(parent->getColor() == 'r' &&
+	     (uncle == NULL || uncle->getColor() == 'b') &&
+	     parent->getLeft() == current){//case 4 (parent=red, uncle=black or null, current="left grandchild"-->left of parent)
+      //FOR CASE 4: rotate current to the right around parent
+      if(grand != NULL){//should not be equal to null but good to check
+	grand->setRight(current);
+	current->setRight(parent);
+	parent->setParent(current);
+	current->setParent(grand);
+	//FOR CASE 4: rotate grandparent to left
+	if(grand->getParent() != NULL){
+	  if(grand->getParent()->getRight() == grand){//on right side of tree. Set right to current
+	    grand->getParent()->setRight(current);
+	    
+	  }else if(grand->getParent()->getLeft() == grand){//on left side of tree. Set left to current
+	    grand->getParent()->setRight(current);
+	  }
+	  current->setLeft(grand);
+	  current->setParent(grand->getParent());
+	  grand->setParent(current);
+	  //FOR CASE 4: color current black and grand red
+	  current->setColor('b');
+	  grand->setColor('r');
+	}
+      }else{
+	cout << "null grand on case 4!" << endl;
+      }       
+     
+
       
+    }else if(parent->getColor() == 'r' &&
+	     (uncle == NULL ||
+	      uncle->getColor() == 'b') &&
+	     parent->getRight() == current){//case 5 (same as case 4 but current is right of parent
+      //FOR CASE 5...
     }
   }else{//case 1: make sure root is black
-    
+    current->setColor('b');
+  }
+
+  if(root->getColor() != 'b'){//ensure that root is always black
+    root->setColor('b');
   }
 
 }
