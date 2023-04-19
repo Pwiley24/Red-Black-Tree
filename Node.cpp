@@ -84,13 +84,12 @@ Node* Node::getSib(Node* parent){
 //get the uncle of the node (sibling of the parent or grandparents other child)
 Node* Node::getUncle(Node* grand, Node* parent){
   if(grand != NULL){//not root
-    if(grand != NULL){//node has a grandparent
-      if(grand->getLeft() != NULL &&
-	 grand->getLeft() != parent){//uncle is on the left
-	return grand->getLeft();
-      }else{//uncle on the right
-	return grand->getRight();
-      }
+    if(grand->getLeft() != NULL &&
+       grand->getLeft() != parent){//uncle is on the left
+      return grand->getLeft();
+    }else if(grand->getRight() != NULL &&
+	     grand->getRight() != parent){//uncle on the right
+      return grand->getRight();
     }
   }
   return NULL;
