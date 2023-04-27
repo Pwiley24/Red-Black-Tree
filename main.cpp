@@ -13,19 +13,20 @@
 
 using namespace std;
 
-void adjustNode(Node* current, Node* &root);
-void add_to_tree(Node* value, Node* current, Node* &root);
+void adjustNode(Node* current, Node* &root, char side);
+void add_to_tree(Node* value, Node* current, Node* &root, char &side, int count);
 void display_tree(Node* current, int depth);
 Node* search_tree(Node* current, int value);
 void delete_from_tree(Node* position, Node* parent, Node* &root);
 Node* find_left_or_right(Node* current, char direction);
-void rightRotate(Node* top, Node* middle, Node* bottom);
-void leftRotate(Node* top, Node* middle, Node* &root);
+void rightRotate(Node* top, Node* &root);
+void leftRotate(Node* top, Node* &root);
 
 int main(){
   char input[20];
   Node* root = NULL;
   bool running = true;
+  char side;
 
   while(running){
     cout << "Enter a command (ADD, DELETE, SEARCH, DISPLAY, QUIT):" << endl;
@@ -59,10 +60,10 @@ int main(){
 	for(ptr = fileNums.begin(); ptr < fileNums.end(); ptr++){//add all values
 	  Node* newNode = new Node();
 	  newNode->setValue(*ptr);
-	  add_to_tree(newNode, root, root);
+	  add_to_tree(newNode, root, root, side, 0);
 	  //the node has been established. Adjust nodes to match red tree black tree
 	  cout << "Current: " << newNode->getValue() << endl;
-	  adjustNode(newNode, root);
+	  adjustNode(newNode, root, side);
 	}
       }else if(strcmp(input, "NUMBER") == 0){ //adding by number
 	int number;
@@ -72,9 +73,9 @@ int main(){
 
 	Node* newNode = new Node();
 	newNode->setValue(number);
-	add_to_tree(newNode, root, root);
+	add_to_tree(newNode, root, root, side, 0);
 	//the node has been established. Adjust nodes to match red tree black tree
-	adjustNode(newNode, root);
+	adjustNode(newNode, root, side);
       }
     }else if(strcmp(input, "DELETE") == 0){//delete a value in tree
       int number;
@@ -241,26 +242,36 @@ void display_tree(Node* current, int depth){
 
 
 //add number value to tree
-void add_to_tree(Node* value, Node* current, Node* &root){
+void add_to_tree(Node* value, Node* current, Node* &root, char &side, int count){
   if(root == NULL){//first value
     root = value;
     root->setColor('b');
   }else{//not first
     if(current->getValue() > value->getValue()){ //value goes to left
+      if(count == 0){//determines which side of tree value is on
+	cout << "value going to left" << endl;
+	side = 'l';
+      }
       if(current->getLeft() == NULL){//value goes to immediate left
 	current->setLeft(value);
 	value->setParent(current);
 	value->setColor('r');
       }else{ //keep going down left of head
-	add_to_tree(value, current->getLeft(), root);
+	count++;
+	add_to_tree(value, current->getLeft(), root, side, count);
       }
     }else if(current->getValue() <= value->getValue()){//value goes to right
+      if(count == 0){//determines which side of tree value is on
+	cout << "value going to right" << endl;
+	side = 'r';
+      }
       if(current->getRight() == NULL){//value goes to immediate right
 	current->setRight(value);
 	value->setParent(current);
 	value->setColor('r');
       }else{//keep going down right of head
-	add_to_tree(value, current->getRight(), root);
+	count++;
+	add_to_tree(value, current->getRight(), root, side, count);
       }
     }
   }
@@ -274,7 +285,7 @@ void add_to_tree(Node* value, Node* current, Node* &root){
 //case 3: parent and uncle nodes are red
 //case 4: parent node is red, uncle node is black/NULL, inserted node is "left grandchild"
 //case 5: parent node is red, uncle node is black/NULL, inserted node is "right grandchild"
-void adjustNode(Node* current, Node* &root){
+void adjustNode(Node* current, Node* &root, char side){
   if(current != root){//not the root -> cases 2-4
     Node* grand = NULL;
     Node* parent = NULL;
@@ -316,7 +327,7 @@ void adjustNode(Node* current, Node* &root){
       if(grand != NULL &&
 	 grand->getParent() != NULL &&
 	 grand->getParent()->getColor() == 'r'){
-	adjustNode(grand, root);
+	adjustNode(grand, root, side);
       }
     }else if(parent != NULL &&
 	     parent->getColor() == 'r' &&
@@ -325,8 +336,15 @@ void adjustNode(Node* current, Node* &root){
       cout << "case 4: " << current->getValue() << endl;
       //FOR CASE 4: rotate current to the right around parent
       if(grand != NULL){//should not be equal to null but good to check
-	rightRotate(grand, parent, current);
-	leftRotate(grand, current, root);
+	if(side == 'l'){//if on the left side, rotate left then right
+	  cout << "left side" << endl;
+	  rightRotate(grand, root);
+	  
+	}else{//if on the right side, rotate right only
+	  cout << "right side" << endl;
+	  rightRotate(grand, root);
+	  leftRotate(grand, root);
+	}
 
       }else{
 	cout << "null grand on case 4!" << endl;
@@ -340,7 +358,14 @@ void adjustNode(Node* current, Node* &root){
 	     parent->getRight() == current){//case 5 (same as case 4 but current is right of parent
       //FOR CASE 5: rotate left like in case 4
       cout << "case 5: " << current->getValue() << endl;
-      leftRotate(grand, parent, root);
+      if(side == 'l'){//if on left side of tree, rotate left then right
+	leftRotate(grand, root);
+	rightRotate(grand, root);
+      }else {//if on the right side of tree, rotate left only
+	leftRotate(grand, root);
+      }
+      
+      
     }
   }else{//case 1: make sure root is black
     root->setColor('b');
@@ -353,9 +378,10 @@ void adjustNode(Node* current, Node* &root){
 
 }
 
-//rotate right around a node:
+/*
+//rotate right around a node:   GRAND, PARENT, CURRENT
 void rightRotate(Node* top, Node* middle, Node* bottom){
-  //if 
+  /*
   if(top->getRight() == middle){//dealing with right side of tree
     top->setRight(bottom);
     bottom->setRight(middle);
@@ -369,10 +395,82 @@ void rightRotate(Node* top, Node* middle, Node* bottom){
   middle->setParent(bottom);
   middle->setLeft(NULL);
   
+  
+  
+}
+*/
+
+void rightRotate(Node* top, Node* &root){
+  Node* bottom = top->getLeft();
+
+  top->setLeft(bottom->getRight());
+
+  if(bottom->getRight() != NULL){
+    bottom->getRight()->setParent(top);
+  }
+
+  if(top->getParent() != NULL){//set the parent of bottom to the top's parent
+    bottom->getParent()->setParent(top->getParent());
+  }else{//else dealing with the root
+    bottom->setParent(NULL);
+  }
+
+  if(top->getParent() != NULL){
+    root = bottom;
+  }else if(top == top->getParent()->getRight()){//top is a right child
+    top->getParent()->setRight(bottom);
+  }else{//top is left child
+    top->getParent()->setLeft(bottom);
+  }
+
+  bottom->setRight(top);
+  top->setParent(bottom);
+
 }
 
+
+void leftRotate(Node* top, Node* &root){
+  Node* bottom = top->getRight();
+
+  top->setRight(bottom->getLeft());
+
+  if(bottom->getLeft() != NULL){
+    bottom->getLeft()->setParent(top);
+  }
+
+  if(top->getParent() != NULL){//set parent of bottom to top's parent
+    bottom->getParent()->setParent(top->getParent());
+  }else{//dealing with the root
+    bottom->setParent(NULL);
+  }
+
+  if(top->getParent() == NULL){
+    root = bottom;
+  }else if(top == top->getParent()->getLeft()){
+    top->getParent()->setLeft(bottom);
+  }else{
+    top->getParent()->setRight(bottom);
+  }
+
+  bottom->setLeft(top);
+  top->setParent(bottom);
+  
+}
+
+/*
 //rotate left around a node:
-void leftRotate(Node* top, Node* middle, Node* &root){
+void leftRotate(Node* top, Node* middle, Node*  root){
+
+  if(top->getParent() != NULL){ //not dealing with the root
+    if(
+    
+
+  }else{ //dealing with the root
+
+  }
+
+  /*
+
   if(top->getParent() != NULL){
    if(top->getParent()->getRight() == top){//on right side of tree. Set right to current
      top->getParent()->setRight(middle);
@@ -414,5 +512,6 @@ void leftRotate(Node* top, Node* middle, Node* &root){
     cout << "new root: " << root->getValue() << endl;
     
   }
-
+  
 }
+*/
