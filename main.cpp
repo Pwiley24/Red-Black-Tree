@@ -45,7 +45,7 @@ int main(){
 	cin.ignore(50, '\n');
 
 	vector<int> fileNums;
-	ifstream file("number.txt");
+	ifstream file(fileName);
 	if(file.is_open()){
 	  int a;
 	  while(file >> a){
