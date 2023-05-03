@@ -113,6 +113,139 @@ int main(){
   return 0;
 }
 
+/*
+//Delete a number from the tree
+//5 cases:
+//1 = if node is red node -> remove from tree
+//2 = if root is DB (double black) -> remove DB and root is black
+//3 = if DB sibling is black -> remove DB
+//  = if DB;s sibling's children are black -> DB's siblings are red
+//  = if DB's parent black, it becomes DB, otherwise make black
+//4 = If DB's sibling red -> swap DB's and DB's sibling colors
+//  = rotate at parent node in direction of DB node
+//  = check cases if need to readjust
+//5 =
+void delete_from_tree(Node* deleting, Node* &root){
+  Node* parent = NULL;
+  Node* grand = NULL;
+  Node* uncle = NULL;
+  Node* sibling = NULL;
+  Node* replace = NULL;
+  char side;
+  
+  if(deleting->getParent() != NULL){//parent is not null
+    parent = deleting->getParent();
+
+    //sibling and grand parents only exist if there is a parent
+    grand = deleting->getGrand(parent);
+    sibling = deleting->getSib(parent);
+
+    if(grand != NULL){//grand parent isn't null
+      uncle = deleting->getUnlce(grand, parent);
+    }
+  
+
+    if(parent->getLeft() == deleting){//node is the left child
+      side = 'l';
+    }else if(parent->getRight() == deleting){//node is right child
+      side = 'r';
+    }
+  }
+
+
+  
+  //CASE 1: node is red and root -> remove
+  if(deleting->getColor() ==  'r' &&
+     deleting == root){
+    delete deleting;
+    root = NULL;
+
+    
+    //CASE 2: node is red and not root -> remove and set parent left/right to NULL
+  }else if(deleting->getColor() == 'r' &&
+	   deleting != root){
+    replace = NULL;
+    if(deleting->getLeft() != NULL){//replace will be left child of deleting
+      replace = deleting->getLeft();
+    }else if(deleting->getRight() != NULL){//replace will be right child of deleting
+      replace = deleting->getRight();
+    }
+    
+    if(side == 'r'){//set parent's right child to null
+      parent->setRight(replace);
+      delete deleting;
+    }else{//set parent's left child to null
+      parent->setLeft(replace);
+      delete deleting;
+    }
+
+
+
+
+    //CASE 3: deleting is a DB node and is the root -> remove DB and root is black
+    if((deleting->getColor() == 'B' ||
+	deleting == NULL) &&
+       deleting == root){
+      replace = NULL;
+      if(deleteing->getRight() != NULL){//right child will replace
+	replace = deleting->getRight();
+	side = 'r';
+      }else if(deleting->getLeft() != NULL){//left child will replace
+	replace = deleting->getLeft();
+	side = 'l';
+      }
+      if(replace != NULL){//delete deleting, set root to replace, set replace parent null, set left if needed 
+	replace->setParent(NULL);
+	root = replace;
+	if(side == 'r'){//if there was a left node connect it to the new root (replace)
+	  replace->setLeft(deleting->getLeft());
+	  deleting->getLeft()->setParent(replace);
+	}
+	delete deleting;
+      }
+
+
+
+
+
+      //CASE 4: deleting is DB, has black sibling, and sibling's children are black
+    }else if((deleting->getColor() == 'B' ||
+	      deleting == NULL) && //deleting is DB or null
+	     sibling != NULL && //sibling is not null
+	     sibling->getColor() == 'b' && //sibling is black
+	     (sibling->getLeft()->getColor() == 'b' ||
+	      sibling->getLeft() == NULL) && //sibling's left child is null or black
+	     (sibling->getRight()->getColor() == 'b' ||
+	      sibling->getRight() == NULL)){ //sibling's right child is null or black
+      //remove DB
+      //made DB's siblings red
+      //if DB's parent is black made it DB, else make it black
+
+      replace = NULL;
+      
+      //delete deleting:
+      if(deleting == NULL){//deleting is null, 
+	
+      }else if(deleting->getRight() != NULL){//if deleting has right child, it replaces deleting
+	replace = deleting->getRight();
+	side = 'r';
+      }else if(deleting->getLeft() != NULL){//deleting has only left child, it replaces deleting
+	replace = deleting->getLeft();
+	side = 'r'
+      }
+
+      if(replace != NULL){//delete deleting, 
+	
+      }
+	       
+    }
+  }
+  
+  
+}
+*/
+
+
 
 //delete a number from the tree
 //position is the node you are going to delete
@@ -121,6 +254,9 @@ int main(){
 //Note: parent can be null -> root of tree is being deleted
 //cases: 0 children, 1 child, 2 children
 void delete_from_tree(Node* position, Node* parent, Node* &root){
+  char ogColor = position->getColor();
+  Node* replace = NULL;
+  
   //Case one:
   if(position->getLeft() == NULL &&
      position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
@@ -139,8 +275,6 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
 	   position->getRight() == NULL) ||
 	   (position->getLeft() == NULL &&
 	    position->getRight() != NULL)){//one child to left/right of position
-
-
 
     if(position->getLeft() != NULL){//set left value of position to new position and delete
       if(parent == NULL){//deleting root and replacing with left child
@@ -169,6 +303,7 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
     }
     delete position;
 
+    
     
     //Case three:
   }else if(position->getLeft() != NULL &&
@@ -294,16 +429,13 @@ void adjustNode(Node* current, Node* &root, char side){
     cout << "current: " << current->getValue() << endl;
     if(current->getParent() != NULL){
       parent = current->getParent();
-      cout << "parent: " << current->getParent()->getValue() << endl;
 
       //can only have grandparent if you have a parent:
       if(current->getGrand(parent) != NULL){
 	grand = current->getGrand(parent);
-	cout << "grand: " << current->getGrand(parent)->getValue() << endl;
 
 	//can only have unlce if you have grandparent:
 	if(current->getUncle(grand, parent) != NULL){
-	  cout << "UNLCE: " << current->getUncle(grand, parent)->getValue() << endl;
 	  uncle = current->getUncle(grand, parent);
 	}
       }
@@ -313,13 +445,11 @@ void adjustNode(Node* current, Node* &root, char side){
        parent->getColor() == 'r' &&
        parent == root){//case 2 (parent and root are red)
       //CASE 2: recolor root black
-      cout << "Case 2" << current->getValue() << endl;
       root->setColor('b');
     }else if(parent->getColor() == 'r' &&
 	     uncle != NULL &&
 	     uncle->getColor() == 'r'){//case 3 (parent and uncle are red)
       //FOR CASE 3: recolor parent and uncle black. Grandparent becomes red
-      cout << "case 3: " << current->getValue() << endl;
       parent->setColor('b');
       uncle->setColor('b');
       grand->setColor('r');
@@ -333,78 +463,39 @@ void adjustNode(Node* current, Node* &root, char side){
 	     parent->getColor() == 'r' &&
 	     (uncle == NULL || uncle->getColor() == 'b') &&
 	     parent->getLeft() == current){//case 4 (parent=red, uncle=black or null, current="left grandchild"-->left of parent)
-      cout << "case 4: " << current->getValue() << endl;
       if(grand->getLeft() == parent){
-
-cout << "rotating grand" << endl;
-
          rightRotate(grand, parent, root);
-        // parent->setRight(grand);
       }else{
-
-cout << "rotating parent" << endl;
-
          rightRotate(parent, current, root);
-        // current->setRight(parent);
       }
       
       //make sure coloring is correct
       display_tree(root, 0);
 
       if(parent->getColor() == 'r'){//still needs to rotate left
-
-cout << "rotating again" << endl;
-
-//check pointers:
-if(current->getParent() != NULL){
-cout << "current's parent: " << current->getParent()->getValue() << endl;
-  if(current->getParent()->getParent() != NULL){
-cout << "current's grand: " << current->getParent()->getParent()->getValue() << endl;
-  }
-}
-
-         leftRotate(grand, current, root);
-        // parent->setLeft(grand);
+	leftRotate(grand, current, root);
          current->setColor('b');
-      }       
-     display_tree(root, 0);
-      
+      }             
     }else if(parent->getColor() == 'r' &&
 	     (uncle == NULL ||
 	      uncle->getColor() == 'b') &&
 	     parent->getRight() == current){//case 5 (same as case 4 but current is right of parent
       //FOR CASE 5: rotate left like in case 4
-      cout << "case 5: " << current->getValue() << endl;
       if(grand->getRight() == parent){
-
-cout << "rotating grand" << endl;
-
          leftRotate(grand, parent, root);
-       //  parent->setLeft(grand);
       }else{
-
-cout << "rotating parent" << endl;
-
          leftRotate(parent, current, root);
-        // current->setLeft(parent);
       }
 
       if(parent->getColor() == ('r')){//still need to rotate right
-
-cout << "rotating again" << endl;
-         
          rightRotate(grand, current, root);
-        // parent->setRight(grand);
          current->setColor('b');
       }
-
-     }
+    }
       
       
-    
   }else{//case 1: make sure root is black
     root->setColor('b');
-    cout << "root case: " << current->getValue() << endl;
   }
 
   if(root->getColor() != 'b'){//ensure that root is always black
@@ -423,9 +514,6 @@ cout << "rotating again" << endl;
  */
 
 void rightRotate(Node* top, Node* bottom, Node* &root){
-// Node* bottom = top->getLeft();
-
-
   if(bottom->getRight() != NULL){//set top's left to bottom's right
    top->setLeft(bottom->getRight());
    bottom->getRight()->setParent(top);
@@ -434,15 +522,11 @@ void rightRotate(Node* top, Node* bottom, Node* &root){
   }
 
 
-
-
   if(top->getParent() != NULL){//set the parent of bottom to the top's parent
     bottom->getParent()->setParent(top->getParent());
   }else{//else dealing with the root
     bottom->setParent(NULL);
   }
-
-
 
 
   if(top->getParent() == NULL){
@@ -454,8 +538,6 @@ void rightRotate(Node* top, Node* bottom, Node* &root){
     top->getParent()->setLeft(bottom);
     bottom->setParent(top->getParent());
   }
-
-
 
   bottom->setRight(top);
   top->setParent(bottom);
@@ -474,8 +556,6 @@ void rightRotate(Node* top, Node* bottom, Node* &root){
 
 
 void leftRotate(Node* top, Node* bottom, Node* &root){
- // Node* bottom = top->getRight();
-
   if(bottom->getLeft() != NULL){
     top->setRight(bottom->getLeft());
     bottom->getLeft()->setParent(top);
