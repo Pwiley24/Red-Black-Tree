@@ -245,6 +245,110 @@ void delete_from_tree(Node* deleting, Node* &root){
 }
 */
 
+void delete_from_tree(Node* deleting, Node* &root, char side){
+  char ogColor = deleting->getColor();
+  Node* x = NULL;
+  char child;
+  Node* parent = NULL;
+
+  //set parent of deleting
+  if(deleting->getParent() != NULL){
+    parent = deleting->getParent();
+  }
+
+  //set child side deleting is of parent
+  if(parent->getLeft() == deleting){
+    child = 'l';
+  }else if(parent->getRight() == deleting){
+    child = 'r';
+  }
+
+
+  
+  //Case 1: deleting has no children and is red (will be red if no children)
+  if(deleting->getLeft() == NULL &&
+     deleting->getRight() == NULL &&
+     ogColor == 'r'){//remove this node from tree
+    if(child == 'l'){//remove child to left of parent
+      parent->setLeft(NULL);
+    }else if(child == 'r'){//remove child to right of parent
+      parent->setRight(NULL);
+    }else if(root == deleting){
+      root = NULL;
+    }
+    delete deleting;
+
+
+    //Case 2: deleting has one child to the right (based on ordering, deleting's children can't both be null
+  }else if(deleting->getLeft() == NULL){ //assign right child of deleting to x
+    x = deleting->getRight();
+    if(parent != NULL){//not the root
+      if(child == 'l'){//deleting is to the left of parent
+	parent->setLeft(x);
+      }else if(child == 'r'){//deleting is to the right of parent
+	parent->setRight(x);
+      }
+    }else{ //dealing with the root
+      x = root;
+      x->setParent(NULL);
+    }
+    x->setColor('b');
+    delete deleting;
+
+
+
+    //Case 3: deleting has one child to the left (based on ordering, deleting's children can't both be null
+  }else if(deleting->getRight() == NULL){//assign left child of deleting to x
+    x = deleting->getLeft();
+    if(parent != NULL){//not the root
+      if(child == 'l'){//deleting is to the left of parent
+	parent->setLeft(x);
+      }else if(child == 'r'){//deleting is to the right of parent
+	parent->setRight(x);
+      }
+    }else{
+      x = root;
+      x->setParent(NULL);
+    }
+    x->setColor('b');
+    //adjustNode before deleting
+    delete deleting;
+
+
+
+    //Case 3: deleting has two children - find largest left node to left of deleting.
+    //Assign it to deleting and remove largest left node. 
+  }else{
+
+    //ASSIGN X
+    if(side == 'l'){//dealing with the left side of the tree - closest left node is the largest
+      x = deleting->getLeft(); 
+    }else if(side == 'r'){//dealing with the right side of tree - largest left is farthest right of left sub
+      x = deleting->getLeft();
+      while(x->getRight() != NULL){
+	x = x->getRight();
+      }
+    }
+
+    //COPY X TO DELETING
+    deleting->setValue(x->getValue());
+
+    //DELETE X'S PARENT CONNECTION
+    if(x->getParent()->getLeft() == x){//x is left child of its parent
+      x->getParent()->setLeft(NULL);
+    }else if(x->getParent()->getRight() == x){//x is right child of its parent
+      x->getParent()->setRight(NULL);
+    }
+
+    adjustNode(x, root, side);
+    delete x;
+
+    
+  }
+
+  
+}
+
 
 
 //delete a number from the tree
@@ -256,6 +360,9 @@ void delete_from_tree(Node* deleting, Node* &root){
 void delete_from_tree(Node* position, Node* parent, Node* &root){
   char ogColor = position->getColor();
   Node* replace = NULL;
+
+
+
   
   //Case one:
   if(position->getLeft() == NULL &&
