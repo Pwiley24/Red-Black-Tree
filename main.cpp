@@ -245,6 +245,7 @@ void delete_from_tree(Node* deleting, Node* &root){
 }
 */
 
+/*
 void delete_from_tree(Node* deleting, Node* &root, char side){
   char ogColor = deleting->getColor();
   Node* x = NULL;
@@ -349,7 +350,7 @@ void delete_from_tree(Node* deleting, Node* &root, char side){
   
 }
 
-
+*/
 
 //delete a number from the tree
 //position is the node you are going to delete
@@ -357,14 +358,12 @@ void delete_from_tree(Node* deleting, Node* &root, char side){
 //parent = parent of position
 //Note: parent can be null -> root of tree is being deleted
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, Node* parent, Node* &root){
+void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
   char ogColor = position->getColor();
   Node* replace = NULL;
 
-
-
   
-  //Case one:
+  //Case one: no children
   if(position->getLeft() == NULL &&
      position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
     if(parent == NULL){//deleting the root with no children - head is null now
@@ -374,16 +373,27 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
     }else{
       parent->setRight(NULL);
     }
+
+    if(replace == NULL){//run the null deletion function
+
+    }else if(ogColor == replace->getColor() &&
+	     ogColor == 'b'){
+      adjustNode(replace, root, side);
+    }else{
+      replace->setColor('b');
+    }
+    
     delete position;
 
 
-       //Case two:
+       //Case two: child to left/right
    }else if((position->getLeft() != NULL &&
 	   position->getRight() == NULL) ||
 	   (position->getLeft() == NULL &&
 	    position->getRight() != NULL)){//one child to left/right of position
 
     if(position->getLeft() != NULL){//set left value of position to new position and delete
+      replace = position->getLeft();
       if(parent == NULL){//deleting root and replacing with left child
 	position->getLeft()->setParent(NULL);
         root = position->getLeft();
@@ -394,8 +404,10 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
   	  parent->setRight(position->getLeft());
         }
         position->getLeft()->setParent(parent);
+	
       }
     }else{//setting right of position
+      replace = position->getRight();
       if(parent == NULL){//deleting root and replacing with right child
         position->getRight()->setParent(NULL);
         root = position->getRight();
@@ -408,6 +420,24 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
         position->getRight()->setParent(parent);
       }
     }
+
+ 
+    if(replace == NULL){//call the NULL case deletion function
+      adjustNull(root, side);
+    }else if(ogColor == replace->getColor() &&
+	     ogColor == black){//adjust the tree with the new node
+      adjustNode(replace, root, side);
+    }else{
+      replace->setColor('b');
+    }
+    //if replace black call
+    //or position is black
+    if(replace->getColor() == 'b' ||
+       ogColor == 'b'){
+      adjustDeleting(replace, root);
+    }
+
+    
     delete position;
 
     
@@ -423,12 +453,57 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
     Node* leftMost = find_left_or_right(rightOne, 'L');
 
     position->setValue(leftMost->getValue());
-    delete_from_tree(leftMost, leftMost->getParent(), root);
+    delete_from_tree(leftMost, leftMost->getParent(), root, side);
     
     
   }
 }
 
+
+
+//Deleting cases
+//6 cases
+void adjustDeleting(Node* replaced, Node* &root){
+    Node* sibling = NULL;
+    char childSide;
+    
+    if(replaced->getParent() != NULL){
+      sibling = replaced->getSib(replaced->getParent());
+
+      if(replaced->getParent()->getLeft() == replaced){//replaced is left child so sibling is right
+	child = 'r';
+      }else{
+	child = 'l';
+      }
+    }
+    
+
+    //case 1: replacing the root
+    if(replaced == root){
+      root->setColor('b');
+      return;
+    }
+    
+    //case 2: sibling is red
+    if(sibling != NULL &&
+       sibling->getColor() == 'r'){
+      if(childSide == 'l'){//sibling is on the left side -> rotate right
+	rightRotate(sibling->getParent(), sibling, root);
+      }else if(childSide == 'r'){//sibling is on the right side -> rotate left
+	leftRotate(sibling->getParent(), sibling, root);
+      }
+    }
+
+    //case 3: sibling is black 
+    if(sibling != NULL &&
+       sibling->getColor() == 'b'){
+      sibling->setColor('r');
+      adjustDeleting(sibling->getParent(), root);
+    }
+
+    //case 4: parent is red, sibling and their children are black
+
+}
 
 //find the left most or right most node from a starting position
 Node* find_left_or_right(Node* current, char direction){
