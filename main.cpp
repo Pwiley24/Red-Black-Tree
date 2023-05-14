@@ -25,8 +25,8 @@ void case_1(Node* replaced, Node* &root);
 void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root);
 void case_3(Node* sibling, Node* &root);
 void case_4(Node* parent, Node* sibling);
-void case_5(Node* sibling, char sibSide);
-void cse_6(Node* sibling, Node* parent, char sibSide);
+void case_5(Node* sibling, char sibSide, Node* &root);
+void case_6(Node* sibling, Node* parent, char sibSide, Node* &root);
 
 
 int main(){
@@ -127,7 +127,7 @@ int main(){
 //parent = parent of position
 //Note: parent can be null -> root of tree is being deleted
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
+void delete_from_tree(Node* position, Node* parent, Node* &root){
   char ogColor = position->getColor();
   Node* replace = NULL;
   Node* sibling = NULL;
@@ -145,7 +145,7 @@ void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
     }
 
     if(ogColor == 'b' && position != root){//call the adjust NULL method
-      
+       case_1(position, root);     
     }
     
     delete position;
@@ -188,11 +188,12 @@ void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
 
  
     if(replace == NULL){//call the NULL case deletion function
-      adjustNull(root, side);
+    
     }else if(replace == root){//call case 1
       case_1(replace, root);
     }else if(replace->getColor() == 'b' ||
-	     ogColor == 'b'){//cases 2-6 must need these specification to be called
+	     ogColor == 'b' ||
+             replace == NULL){//cases 2-6 must need these specification to be called
 
       //establish sibling and sibling side
       if(replace->getParent() != NULL){
@@ -208,7 +209,7 @@ void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
 	 sibling->getColor() == 'r'){//call case 2
 	case_2(replace, sibling, sibSide, root);
       }else if(sibling != NULL &&
-	       sibling->getColor('b')){
+	       sibling->getColor() == 'b'){
 	case_3(sibling, root);
       }
       
@@ -231,16 +232,30 @@ void delete_from_tree(Node* position, Node* parent, Node* &root, char side){
     Node* leftMost = find_left_or_right(rightOne, 'L');
 
     position->setValue(leftMost->getValue());
-    delete_from_tree(leftMost, leftMost->getParent(), root, side);
+    delete_from_tree(leftMost, leftMost->getParent(), root);
     
     
   }
 }
 
+
+
 //Replaced is at the root and only one child
 void case_1(Node* replaced, Node* &root){
   if(replaced == root){//double check
     root->setColor('b');
+    return;
+  }
+  //establish sibling:
+  if(replaced->getParent() != NULL &&
+     replaced->getSib(replaced->getParent()) != NULL){
+    char sibSide;
+    if(replaced->getParent()->getLeft() == replaced){
+       sibSide = 'r';
+    }else{
+       sibSide = 'l';
+    }
+    case_2(replaced, replaced->getSib(replaced->getParent()), sibSide, root);  
   }
 }
 
@@ -250,11 +265,11 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
   if(sibSide == 'l'){//sibling is on left side -> rotate right
     rightRotate(sibling->getParent(), sibling, root);
   }else if(sibSide == 'r'){//sibling is on right side -> rotate left
-    leftRotate(sibling->getParent, sibling, root);
+    leftRotate(sibling->getParent(), sibling, root);
   }
 
   //call case 3 if sibling becomes red:
-  if(sibling->getColor == 'b'){
+  if(sibling->getColor() == 'b'){
     case_3(sibling, root);
   }
 
@@ -262,8 +277,8 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
   
   //call case 4
   if(sibling->getParent()->getColor() == 'r' &&
-     sibling->getLeft() != 'r' &&
-     sibling->getRight() != 'r'){//children are either black or NULL and parent of sibling is red
+     sibling->getLeft()->getColor() != 'r' &&
+     sibling->getRight()->getColor() != 'r'){//children are either black or NULL and parent of sibling is red
     case_4(sibling->getParent(), sibling); 
   }
 
@@ -273,13 +288,13 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
       sibling->getLeft()->getColor() == 'b') &&
      sibling->getRight()->getColor() == 'r' &&
      sibSide == 'r'){
-    case_5(sibling, sibSide);//sibSide will be on the left side
+    case_5(sibling, sibSide, root);//sibSide will be on the left side
   }else if(sibling->getColor() == 'b' &&
 	   (sibling->getRight() == NULL ||
 	    sibling->getRight()->getColor() == 'b') &&
 	   sibling->getLeft()->getColor() == 'r' &&
 	   sibSide == 'l'){
-    case_5(sibling, sibSide);//sibside will be right side
+    case_5(sibling, sibSide, root);//sibside will be right side
   }
 
 
@@ -289,14 +304,14 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
       sibling->getLeft()->getColor() == 'b') &&
      sibling->getRight()->getColor() == 'r' &&
      sibSide == 'l'){
-    case_6(sibling, sibling->getParent(), sibSide);//sibSide will be on the right side
+    case_6(sibling, sibling->getParent(), sibSide, root);//sibSide will be on the right side
     
   }else if(sibling->getColor() == 'b' &&
 	   (sibling->getRight() == NULL ||
 	    sibling->getRight()->getColor() == 'b') &&
 	   sibling->getLeft()->getColor() == 'r' &&
 	   sibSide == 'r'){
-    case_6(sibling, sibling->getParent(), sibSide); //sibSide will be on the left side
+    case_6(sibling, sibling->getParent(), sibSide, root); //sibSide will be on the left side
   }
   
 }
@@ -317,13 +332,13 @@ void case_4(Node* parent, Node* sibling){
 
 //sibling and siblings left child is black, sibling's right is red if right sibSide
 //sibling and siblings right child is black, sibling's left is red if left sibSide
-void case_5(Node* sibling, char sibSide){
+void case_5(Node* sibling, char sibSide, Node* &root){
   if(sibSide == 'r'){//rotate right
-    rightRotate(sibling, sibling->getLeft());
+    rightRotate(sibling, sibling->getLeft(), root);
     sibling->getLeft()->setColor('b'); //double check
     
   }else if(sibSide == 'l'){//rotate left
-    leftRotate(sibling, sibling->getRight());
+    leftRotate(sibling, sibling->getRight(), root);
     sibling->getRight()->setColor('b'); //double check
   }
   sibling->setColor('r'); //double check
@@ -333,18 +348,18 @@ void case_5(Node* sibling, char sibSide){
 
 //sibling and siblings left child is black, sibling's right is red if left sibSide
 //sibling and siblings right child is black, sibling's left is red if right sibSide
-void case_6(Node* sibling, Node* parent, char sibSide){
+void case_6(Node* sibling, Node* parent, char sibSide, Node* &root){
   if(sibSide == 'l'){//rotate right
-    rightRotate(sibling->getParent(), sibling);
+    rightRotate(sibling->getParent(), sibling, root);
     sibling->getLeft()->setColor('b');
     
   }else if(sibSide == 'r'){//rotate left
-    leftRotate(sibling->getParent(), sibling);
+    leftRotate(sibling->getParent(), sibling, root);
     sibling->getRight()->setColor('b');
   }
 
   //adjust colors
-  sibling->setColor(parent->getColor);
+  sibling->setColor(parent->getColor());
   parent->setColor('b');
   
 }
