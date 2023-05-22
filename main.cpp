@@ -17,7 +17,7 @@ void adjustNode(Node* current, Node* &root, char side);
 void add_to_tree(Node* value, Node* current, Node* &root, char &side, int count);
 void display_tree(Node* current, int depth);
 Node* search_tree(Node* current, int value);
-void delete_from_tree(Node* position, Node* parent, Node* &root);
+void delete_from_tree(Node* position, Node* parent, Node* replace, Node* &root);
 Node* find_left_or_right(Node* current, char direction);
 void rightRotate(Node* top, Node* bottom, Node* &root);
 void leftRotate(Node* top, Node* bottom, Node* &root);
@@ -91,7 +91,7 @@ int main(){
       cin.ignore(10, '\n');
       Node* position = search_tree(root, number);
       if(position != NULL){//value exists to delete
-	delete_from_tree(position, position->getParent(), root); 
+	delete_from_tree(position, position->getParent(), NULL, root); 
       }else{
         cout << "Number doesn't exist in tree." << endl;
       }
@@ -127,9 +127,8 @@ int main(){
 //parent = parent of position
 //Note: parent can be null -> root of tree is being deleted
 //cases: 0 children, 1 child, 2 children
-void delete_from_tree(Node* position, Node* parent, Node* &root){
+void delete_from_tree(Node* position, Node* parent, Node* replace, Node* &root){
   char ogColor = position->getColor();
-  Node* replace = NULL;
   Node* sibling = NULL;
   char sibSide;
 
@@ -141,8 +140,9 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
     if(parent == NULL){//deleting the root with no children - head is null now
       root = NULL; 
     }
-
-    if(ogColor == 'b' && position != root){//check to call cases
+    cout << "no child" << endl;
+    //if this is it has not gone through recursion, check on position
+    if(ogColor == 'b' && position != root && replace == NULL){//check to call cases
       //check case 2:      
       if(position->getParent() != NULL){
 	sibling = position->getSib(position->getParent());
@@ -152,19 +152,39 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
           sibSide = 'l';
 	}
 
-	
+        cout << "deleting has no children " << position->getValue() << endl;
 	case_2(position, sibling, sibSide, root);
 	
       }
-	
     }
+	 
 
+    //delete position now
     if(parent->getLeft() == position){//set parent left to null
       parent->setLeft(NULL);
     }else{
       parent->setRight(NULL);
     }
     delete position;
+
+
+    //recursion has occured so we must run the cases on the replaced node
+    //note: replace is in the position of the original position before recursion
+    if(replace != NULL && replace->getColor() == 'b' && replace != root){
+       //check case 2:
+      if(replace->getParent() != NULL){
+        sibling = replace->getSib(replace->getParent());
+        if(replace->getParent()->getLeft() == replace){//replace is left child so right is sibling
+          sibSide = 'r';
+        }else if(replace->getParent()->getRight() == replace){//replace is right child so left is sibling
+          sibSide = 'l';
+        }
+
+        cout << "deleting has no children and recursion" << replace->getValue() << endl;
+        case_2(replace, sibling, sibSide, root);
+
+      }
+    }
 
 
        //Case two: child to left/right
@@ -241,7 +261,7 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
         
     //Case three:
   }else if(position->getLeft() != NULL &&
-	   position->getRight() != NULL){//two children - find farthest left position right's left
+	   position->getRight() != NULL){//two children - find farthest left position of right's left
 
     //STORE RIGHT ONE
     Node* rightOne = position->getRight();
@@ -250,7 +270,7 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
     Node* leftMost = find_left_or_right(rightOne, 'L');
 
     position->setValue(leftMost->getValue());
-    delete_from_tree(leftMost, leftMost->getParent(), root);
+    delete_from_tree(leftMost, leftMost->getParent(), position, root);
     
     
   }
@@ -282,7 +302,8 @@ void case_1(Node* replaced, Node* &root){
 
 //Sibling of replaced is red. Rotate left or right
 void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
-  cout << "case 2" << replaced->getValue() << endl;
+  cout << "case 2 " << replaced->getValue() << endl;
+  cout << "sibling: " << sibling->getValue() << endl;
   if(sibling->getColor() == 'r'){
     cout << "sibling is red" << endl;
     if(sibSide == 'l'){//sibling is on left side -> rotate right
@@ -290,7 +311,17 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
     }else if(sibSide == 'r'){//sibling is on right side -> rotate left
       leftRotate(sibling->getParent(), sibling, root);
     }
+
+    //reestablish sibling:
+    if(replaced->getParent() != NULL){
+      sibling = replaced->getSib(replaced->getParent());
+    }
   }
+
+cout << "SIB: " << sibling->getValue() << endl;
+display_tree(root, 0);
+
+
 
   //call case 3 if sibling becomes red:
   if(sibling->getColor() == 'b' &&
@@ -302,11 +333,17 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
   
   //call case 4
   if(sibling->getParent()->getColor() == 'r' &&
-     sibling->getLeft() != NULL &&
-      sibling->getLeft()->getColor() != 'r' &&
+     (sibling->getLeft() == NULL ||
+      sibling->getLeft()->getColor() != 'r') &&
      sibling->getRight() != NULL &&
       sibling->getRight()->getColor() != 'r'){//children are either black or NULL and parent of sibling is red
     case_4(sibling->getParent(), sibling); 
+  }else if(sibling->getParent()->getColor() == 'r' &&
+           sibling->getLeft() != NULL &&
+           sibling->getLeft()->getColor() != 'r' &&
+           (sibling->getRight() == NULL ||
+           sibling->getRight()->getColor() != 'r')){
+    case_4(sibling->getParent(), sibling);
   }
 
   //call case 5
@@ -384,7 +421,7 @@ void case_5(Node* sibling, char sibSide, Node* &root){
 //sibling and siblings right child is black, sibling's left is red if left sibSide
 //sibling and siblings left child is black, sibling's right is red if right sibSide
 void case_6(Node* sibling, Node* parent, char sibSide, Node* &root){
-  cout << "case 6" << endl;
+  cout << "case 6 " << sibling->getValue() << endl;
   if(sibSide == 'l'){//rotate right
     sibling->getLeft()->setColor('b');
     rightRotate(sibling->getParent(), sibling, root);
@@ -633,12 +670,14 @@ void rightRotate(Node* top, Node* bottom, Node* &root){
 
 
 void leftRotate(Node* top, Node* bottom, Node* &root){
-  if(bottom->getLeft() != NULL){
+
+ if(bottom->getLeft() != NULL){
     top->setRight(bottom->getLeft());
     bottom->getLeft()->setParent(top);
   }else{
     top->setRight(NULL);
   }
+  
 
   if(top->getParent() != NULL){//set parent of bottom to top's parent
     bottom->getParent()->setParent(top->getParent());
