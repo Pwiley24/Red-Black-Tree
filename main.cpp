@@ -330,8 +330,10 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
 
   //call case 3 if sibling becomes red:
   if(sibling->getColor() == 'b' &&
-     sibling->getLeft() == NULL &&
-     sibling->getRight() == NULL){
+     (sibling->getLeft() == NULL ||
+      sibling->getLeft()->getColor() == 'b') &&
+     (sibling->getRight() == NULL ||
+      sibling->getRight()->getColor() == 'b')){
     case_3(sibling, root);
   }
 
@@ -401,9 +403,11 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
 void case_3(Node* sibling, Node* &root){
   cout << "case 3 " << sibling->getValue() << endl;
   sibling->setColor('r');
-  cout << "parent of sib " << sibling->getParent()->getValue() << " " << sibling->getParent()->getColor() << endl;
-  if(sibling->getParent()->getColor() == 'b'){
-    case_1(sibling->getParent(), root);
+  if(sibling->getParent() != NULL){
+    cout << "parent of sib " << sibling->getParent()->getValue() << " " << sibling->getParent()->getColor() << endl;
+    if(sibling->getParent()->getColor() == 'b'){
+      case_1(sibling->getParent(), root);
+    }
   }
 }
 
