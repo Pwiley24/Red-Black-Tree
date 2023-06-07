@@ -138,8 +138,8 @@ void delete_from_tree(Node* position, Node* parent, Node* &root){
   //Case one: no children
   if(position->getLeft() == NULL &&
      position->getRight() == NULL){//zero children - delete child and set parent to left/right to null
-    cout << "deleting spot (90) has no children" << endl;
-    cout << "position " << position->getValue() << endl;
+    cout << "deleting spot has no children" << endl;
+    cout << "position " << position->getValue() << " " << position->getColor() << endl;
     if(parent == NULL){//deleting the root with no children - head is null now
       root = NULL; 
     }
@@ -340,8 +340,8 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
   if(sibling->getParent()->getColor() == 'r' &&
      (sibling->getLeft() == NULL ||
       sibling->getLeft()->getColor() != 'r') &&
-     sibling->getRight() != NULL &&
-      sibling->getRight()->getColor() != 'r'){//children are either black or NULL and parent of sibling is red
+     (sibling->getRight() == NULL ||
+      sibling->getRight()->getColor() != 'r')){//children are either black or NULL and parent of sibling is red
     case_4(sibling->getParent(), sibling); 
   }else if(sibling->getParent()->getColor() == 'r' &&
            sibling->getLeft() != NULL &&
@@ -374,7 +374,7 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
   
   cout << "replaced " << replaced->getValue() << " " << replaced->getColor() << endl;
   cout << "sibling before 6 " << sibling->getValue() << " " << sibling->getColor() << endl;
-  display_tree(root, 0);
+  //display_tree(root, 0);
 
   
   //call case 6
@@ -401,7 +401,10 @@ void case_2(Node* replaced, Node* sibling, char sibSide, Node* &root){
 void case_3(Node* sibling, Node* &root){
   cout << "case 3 " << sibling->getValue() << endl;
   sibling->setColor('r');
-  case_1(sibling->getParent(), root);
+  cout << "parent of sib " << sibling->getParent()->getValue() << " " << sibling->getParent()->getColor() << endl;
+  if(sibling->getParent()->getColor() == 'b'){
+    case_1(sibling->getParent(), root);
+  }
 }
 
 
