@@ -1,6 +1,6 @@
 //This program creates a red and black binary tree of nodes that stores integer values.
 //you can search to see if a number exists in the tree, add numbers with a file or by number,
-//delete values from the tree, and display the tree in the terminal (delete feature coming soon.
+//delete values from the tree, and display the tree in the terminal 
 //author: Paige Wiley
 //date: 04-30-2023
 
